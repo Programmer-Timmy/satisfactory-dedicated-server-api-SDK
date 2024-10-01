@@ -1,16 +1,39 @@
 from http.client import responses
 
 import requests
+
+from .data.advanced_game_settings import AdvancedGameSettings
 from .data.minimum_privilege_level import MinimumPrivilegeLevel
+from .data.new_game_save import NewGameData
 from .data.response import Response
 from .exceptions import APIError
 
 
 class SatisfactoryAPI:
-    def __init__(self, host, port=7777, auth_token=None):
-        self.host = host
-        self.port = port
-        self.auth_token = auth_token
+    """ A client for the Satisfactory Dedicated Server API """
+
+    def __init__(self, host: str, port: int = 7777, auth_token: str = None):
+        """
+        Initialize the API client
+
+        Parameters
+        ----------
+        host : str
+            The hostname or IP address of the server
+        port : int, optional
+            The port to connect to, by default 7777
+        auth_token : str, optional
+            The authentication token, by default None.
+            You can use the `password_login` or `passwordless_login` methods to request a token from the server.
+
+        Raises
+        ------
+        APIError
+            If the authentication token is invalid
+        """
+        self.host: str = host
+        self.port: int = port
+        self.auth_token: str | None = auth_token
 
         if self.auth_token:
             self.verify_authentication_token()
@@ -36,6 +59,36 @@ class SatisfactoryAPI:
         payload = {'function': function, 'data': data} if data else {'function': function}
 
         response = requests.post(url, json=payload, headers=headers, files=files, verify=False)
+        if response.status_code != 200 and response.status_code != 204:
+            raise APIError(f"API error: {response.text}")
+
+        if response.status_code == 204:
+            return {}
+
+        if response.json().get('errorCode'):
+            raise APIError(response.json().get('errorMessage'))
+        return response.json()
+
+    def _get(self, function, data=None):
+        """
+        Get a request to the API
+
+        :param function: The function to call
+        :param data: The data to send
+        :return: The response
+        :rtype: dict
+
+        :raises APIError: If the API returns an error
+        """
+        url = f"https://{self.host}:{self.port}/api/v1"
+        headers = {'Content-Type': 'application/json'}
+
+        if self.auth_token:
+            headers['Authorization'] = f'Bearer {self.auth_token}'
+
+        payload = {'function': function, 'data': data} if data else {'function': function}
+
+        response = requests.get(url, json=payload, headers=headers, verify=False)
         if response.status_code != 200 and response.status_code != 204:
             raise APIError(f"API error: {response.text}")
 
@@ -131,7 +184,7 @@ class SatisfactoryAPI:
         APIError
             If the API returns an error or if the login is unsuccessful
             (e.g., incorrect password or insufficient privileges).
-    """
+        """
         response = self._post('PasswordLogin', {
             'MinimumPrivilegeLevel': minimum_privilege_level.value,
             'Password': password
@@ -172,3 +225,322 @@ class SatisfactoryAPI:
         """
         response = self._post('GetServerOptions')
         return Response(success=True, data=response)
+
+    def get_advanced_game_settings(self) -> Response:
+        """
+        Fetch advanced game settings.
+
+        Returns
+        -------
+        Response
+            A Response containing the advanced game settings.
+        """
+        response = self._get('GetAdvancedGameSettings')
+        return Response(success=True, data=response['data'])
+
+    def apply_advanced_game_settings(self, settings: AdvancedGameSettings) -> Response:
+        """
+        Apply advanced game settings.
+
+        Parameters
+        ----------
+        settings : AdvancedGameSettings
+            The new advanced game settings to apply.
+
+        Returns
+        -------
+        Response
+            A Response indicating the success of the operation.
+        """
+        response = self._post('ApplyAdvancedGameSettings', {
+            'AppliedAdvancedGameSettings': settings.__dict__  # Convert dataclass to dict
+        })
+        return Response(success=True, data=response['data'])
+
+    def claim_server(self, server_name: str, admin_password: str) -> Response:
+        """
+        Claim the server.
+
+        Parameters
+        ----------
+        server_name : str
+            The name of the server.
+        admin_password : str
+            The administrator password.
+
+        Returns
+        -------
+        Response
+            A Response containing the server claim result.
+        """
+        response = self._post('ClaimServer', {
+            'ServerName': server_name,
+            'AdminPassword': admin_password
+        })
+        return Response(success=True, data=response['data'])
+
+    def rename_server(self, server_name: str) -> Response:
+        """
+        Rename the server.
+
+        Parameters
+        ----------
+        server_name : str
+            The new name for the server.
+
+        Returns
+        -------
+        Response
+            A Response indicating the success of the operation.
+        """
+        response = self._post('RenameServer', {
+            'ServerName': server_name
+        })
+        return Response(success=True, data=response['data'])
+
+    def set_client_password(self, password: str) -> Response:
+        """
+        Set the client password.
+
+        Parameters
+        ----------
+        password : str
+            The new client password.
+
+        Returns
+        -------
+        Response
+            A Response indicating the success of the operation.
+        """
+        response = self._post('SetClientPassword', {
+            'Password': password
+        })
+        return Response(success=True, data=response['data'])
+
+    def set_admin_password(self, password: str, auth_token: str) -> Response:
+        """
+        Set the admin password.
+
+        Parameters
+        ----------
+        password : str
+            The new admin password.
+        auth_token : str
+            The authentication token.
+
+        Returns
+        -------
+        Response
+            A Response indicating the success of the operation.
+        """
+        response = self._post('SetAdminPassword', {
+            'Password': password,
+            'AuthenticationToken': auth_token
+        })
+        return Response(success=True, data=response['data'])
+
+    def set_auto_load_session_name(self, session_name: str) -> Response:
+        """
+        Set the auto-load session name.
+
+        Parameters
+        ----------
+        session_name : str
+            The session name to auto-load.
+
+        Returns
+        -------
+        Response
+            A Response indicating the success of the operation.
+        """
+        response = self._post('SetAutoLoadSessionName', {
+            'SessionName': session_name
+        })
+        return Response(success=True, data=response['data'])
+
+    def run_command(self, command: str) -> Response:
+        """
+        Run a server command.
+
+        Parameters
+        ----------
+        command : str
+            The command to run.
+
+        Returns
+        -------
+        Response
+            A Response containing the result of the command.
+        """
+        response = self._post('RunCommand', {
+            'Command': command
+        })
+        return Response(success=True, data=response['data'])
+
+    def shutdown(self) -> Response:
+        """
+        Shut down the server.
+
+        Returns
+        -------
+        Response
+            A Response indicating the success of the operation.
+        """
+        response = self._post('Shutdown')
+        return Response(success=True, data=response['data'])
+
+    def apply_server_options(self, options: dict) -> Response:
+        """
+        Apply server options.
+
+        Parameters
+        ----------
+        options : dict
+            The server options to apply.
+
+        Returns
+        -------
+        Response
+            A Response indicating the success of the operation.
+        """
+        response = self._post('ApplyServerOptions', {
+            'UpdatedServerOptions': options
+        })
+        return Response(success=True, data=response['data'])
+
+    def create_new_game(self, game_data: NewGameData) -> Response:
+        """
+        Create a new game.
+
+        Parameters
+        ----------
+        game_data : NewGameData
+            The data for the new game.
+
+        Returns
+        -------
+        Response
+            A Response indicating the success of the operation.
+        """
+        response = self._post('CreateNewGame', {
+            'NewGameData': game_data.__dict__  # Convert dataclass to dict
+        })
+        return Response(success=True, data=response['data'])
+
+    def save_game(self, save_name: str) -> Response:
+        """
+        Save the game.
+
+        Parameters
+        ----------
+        save_name : str
+            The name of the save file.
+
+        Returns
+        -------
+        Response
+            A Response indicating the success of the save operation.
+        """
+        response = self._post('SaveGame', {
+            'SaveName': save_name
+        })
+        return Response(success=True, data=response['data'])
+
+    def delete_save_file(self, save_name: str) -> Response:
+        """
+        Delete a save file.
+
+        Parameters
+        ----------
+        save_name : str
+            The name of the save file to delete.
+
+        Returns
+        -------
+        Response
+            A Response indicating the success of the operation.
+        """
+        response = self._post('DeleteSaveFile', {
+            'SaveName': save_name
+        })
+        return Response(success=True, data=response['data'])
+
+    def delete_save_session(self, session_name: str) -> Response:
+        """
+        Delete a save session.
+
+        Parameters
+        ----------
+        session_name : str
+            The name of the session to delete.
+
+        Returns
+        -------
+        Response
+            A Response indicating the success of the operation.
+        """
+        response = self._post('DeleteSaveSession', {
+            'SessionName': session_name
+        })
+        return Response(success=True, data=response['data'])
+
+    def enumerate_sessions(self) -> Response:
+        """
+        Enumerate available sessions.
+
+        Returns
+        -------
+        Response
+            A Response containing the available sessions.
+        """
+        response = self._get('EnumerateSessions')
+        return Response(success=True, data=response['data'])
+
+    def load_game(self, save_name: str, enable_advanced_game_settings: bool = False) -> Response:
+        """
+        Load a saved game.
+
+        Parameters
+        ----------
+        save_name : str
+            The name of the save file to load.
+        enable_advanced_game_settings : bool, optional
+            Whether to enable advanced game settings (default is False).
+
+        Returns
+        -------
+        Response
+            A Response indicating the success of the load operation.
+        """
+        response = self._post('LoadGame', {
+            'SaveName': save_name,
+            'EnableAdvancedGameSettings': enable_advanced_game_settings
+        })
+        return Response(success=True, data=response['data'])
+
+    def upload_save_game(self, save_name: str, load_save_game: bool = False,
+                         enable_advanced_game_settings: bool = False) -> Response:
+        raise NotImplementedError('This method is not implemented yet')
+
+    def download_save_game(self, save_name: str) -> Response:
+        """
+        Download a save game file.
+
+        Parameters
+        ----------
+        save_name : str
+            The name of the save file to download.
+
+        Returns
+        -------
+        Response
+            A Response indicating the success of the download operation.
+        """
+        response = self._get('DownloadSaveGame', {
+            'SaveName': save_name
+        })
+        return Response(success=True, data=response['data'])
+
+
+
+
