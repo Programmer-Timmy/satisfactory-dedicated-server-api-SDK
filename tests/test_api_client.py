@@ -1,5 +1,5 @@
 import unittest
-from satisfactory_ds_api.api_client import SatisfactoryAPI
+from satisfactory_api_client.api_client import SatisfactoryAPI
 class TestAPIClient(unittest.TestCase):
     def test_initialization(self):
         client = SatisfactoryAPI("localhost")
