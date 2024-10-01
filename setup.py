@@ -1,12 +1,22 @@
+import os
+
 from setuptools import setup, find_packages
+root_dir = os.path.abspath(os.path.dirname(__file__))
+
+# Construct the path to requirements.txt in the root directory
+readme_path = os.path.join(root_dir, 'README.md')
 
 setup(
     name='satisfactory_api_client',
     version='0.1.2',
     packages=find_packages(),
-    install_requires=[req.strip() for req in open('/requirements.txt').readlines()],
+    install_requires=[
+        "python-dotenv~=1.0.1",
+        "urllib3~=2.2.3",
+        "requests~=2.32.3"
+    ],
     description='A Python Package for interacting with the Satisfactory Dedicated Server API',
-    long_description=open('README.md').read(),
+    long_description=open(readme_path).read(),
     long_description_content_type='text/markdown',
     url='https://github.com/Programmer-Timmy/satisfactory-dedicated-server-api-SDK',  # Replace with your repo URL
     author='Programmer-Timmy',
