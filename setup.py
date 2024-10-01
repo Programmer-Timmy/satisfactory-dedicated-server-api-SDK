@@ -8,7 +8,7 @@ readme_path = os.path.join(root_dir, 'README.md')
 
 setup(
     name='satisfactory_api_client',
-    version='0.1.2',
+    version='0.1.3',
     packages=find_packages(),
     install_requires=[
         "python-dotenv~=1.0.1",

@@ -1,5 +1,7 @@
-import dataclasses
-@dataclasses.dataclass
+from dataclasses import dataclass
+
+
+@dataclass
 class AdvancedGameSettings:
     """
     Advanced game settings for a Satisfactory Dedicated Server

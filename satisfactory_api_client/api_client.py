@@ -1,5 +1,3 @@
-from http.client import responses
-
 import requests
 
 from .data.advanced_game_settings import AdvancedGameSettings
