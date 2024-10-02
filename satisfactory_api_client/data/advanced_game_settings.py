@@ -18,10 +18,28 @@ class AdvancedGameRules:
 
 @dataclass
 class AdvancedGameSettings:
+    """
+    Represents the advanced game settings of a Satisfactory server.
+
+    Attributes
+    ----------
+    creativeModeEnabled : bool
+        Whether or not creative mode is enabled.
+    advancedGameSettings : AdvancedGameRules
+        The advanced game settings.
+    """
     creativeModeEnabled: bool
     advancedGameSettings: AdvancedGameRules
 
     def to_json(self) -> str:
+        """
+        Converts the advanced game settings to a JSON string.
+
+        Returns
+        -------
+        str
+            The advanced game settings as a JSON string.
+        """
         # Convert to a dictionary
         settings_dict = asdict(self)
         # Create a new dictionary with dot notation

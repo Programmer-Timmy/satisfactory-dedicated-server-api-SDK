@@ -220,7 +220,7 @@ class SatisfactoryAPI:
             A Response indicating the success of the operation.
         """
         self._post('ApplyAdvancedGameSettings', {
-            'AppliedAdvancedGameSettings': settings.__dict__  # Convert dataclass to dict
+            'AdvancedGameSettings': settings.to_json()
         })
         return Response(success=True, data={'message': 'Successfully applied advanced game settings'})
 
