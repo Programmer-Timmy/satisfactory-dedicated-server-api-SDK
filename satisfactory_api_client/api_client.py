@@ -4,6 +4,7 @@ from .data.advanced_game_settings import AdvancedGameSettings
 from .data.minimum_privilege_level import MinimumPrivilegeLevel
 from .data.new_game_save import NewGameData
 from .data.response import Response
+from .data.server_options import ServerOptions
 from .exceptions import APIError
 
 
@@ -128,7 +129,7 @@ class SatisfactoryAPI:
         """
         response = self._post('PasswordlessLogin', {'MinimumPrivilegeLevel': minimum_privilege_level.value})
         self.auth_token = response['authenticationToken']
-        return Response(success=True, data=self.auth_token)
+        return Response(success=True, data={'message': 'Successfully logged in, the token is now stored'})
 
     def password_login(self, minimum_privilege_level: MinimumPrivilegeLevel, password: str) -> Response:
         """
@@ -219,10 +220,13 @@ class SatisfactoryAPI:
         Response
             A Response indicating the success of the operation.
         """
-        response = self._post('ApplyAdvancedGameSettings', {
-            'AppliedAdvancedGameSettings': settings.__dict__  # Convert dataclass to dict
+        self._post('ApplyAdvancedGameSettings', {
+            'AdvancedGameSettings': settings.to_json()
         })
-        return Response(success=True, data=response)
+        return Response(success=True, data={
+            'message': 'Successfully applied advanced game settings to the server.',
+            'settings': settings
+        })
 
     def claim_server(self, server_name: str, admin_password: str) -> Response:
         """
@@ -308,7 +312,7 @@ class SatisfactoryAPI:
 
     def set_auto_load_session_name(self, session_name: str) -> Response:
         """
-        Set the auto-load session name.
+        Set the auto-load session name. You can get session names by calling `enumerate_sessions` (You need admin privileges).
 
         Parameters
         ----------
@@ -353,10 +357,13 @@ class SatisfactoryAPI:
         Response
             A Response indicating the success of the operation.
         """
-        response = self._post('Shutdown')
-        return Response(success=True, data=response)
+        self._post('Shutdown')
+        return Response(success=True, data={
+            'message': "Server is shutting down... Note: If the server is configured as a service and the restart "
+                       "policy is set to 'always', it will restart automatically."
+        })
 
-    def apply_server_options(self, options: dict) -> Response:
+    def apply_server_options(self, options: ServerOptions) -> Response:
         """
         Apply server options.
 
@@ -370,10 +377,12 @@ class SatisfactoryAPI:
         Response
             A Response indicating the success of the operation.
         """
-        response = self._post('ApplyServerOptions', {
-            'UpdatedServerOptions': options
+        self._post('ApplyServerOptions', {
+            'UpdatedServerOptions': options.to_json()
         })
-        return Response(success=True, data=response)
+        return Response(success=True, data={'message': 'Successfully applied server options to the server.',
+                                            'options': options
+                                            })
 
     def create_new_game(self, game_data: NewGameData) -> Response:
         """
@@ -453,7 +462,7 @@ class SatisfactoryAPI:
 
     def enumerate_sessions(self) -> Response:
         """
-        Enumerate available sessions.
+        Enumerate available sessions. You need admin privileges to call this function.
 
         Returns
         -------
@@ -507,7 +516,3 @@ class SatisfactoryAPI:
             'SaveName': save_name
         })
         return Response(success=True, data=response)
-
-
-
-
