@@ -65,7 +65,7 @@ class SatisfactoryAPI:
 
         if response.json().get('errorCode'):
             raise APIError(response.json().get('errorMessage'))
-        return response.json()
+        return response.json().get('data')
 
     def _get(self, function, data=None):
         """
@@ -158,7 +158,7 @@ class SatisfactoryAPI:
             (e.g., incorrect password or insufficient privileges).
         """
         response = self._post('PasswordlessLogin', {'MinimumPrivilegeLevel': minimum_privilege_level.value})
-        self.auth_token = response['data']['authenticationToken']
+        self.auth_token = response['authenticationToken']
         return Response(success=True, data=self.auth_token)
 
     def password_login(self, minimum_privilege_level: MinimumPrivilegeLevel, password: str) -> Response:
@@ -187,7 +187,7 @@ class SatisfactoryAPI:
             'MinimumPrivilegeLevel': minimum_privilege_level.value,
             'Password': password
         })
-        self.auth_token = response['data']['authenticationToken']
+        self.auth_token = response['authenticationToken']
         return Response(success=True, data={'message': 'Successfully logged in, the token is now stored'})
 
     def query_server_state(self):
