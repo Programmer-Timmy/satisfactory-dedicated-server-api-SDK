@@ -311,7 +311,7 @@ class SatisfactoryAPI:
 
     def set_auto_load_session_name(self, session_name: str) -> Response:
         """
-        Set the auto-load session name.
+        Set the auto-load session name. You can get session names by calling `enumerate_sessions` (You need admin privileges).
 
         Parameters
         ----------
@@ -456,7 +456,7 @@ class SatisfactoryAPI:
 
     def enumerate_sessions(self) -> Response:
         """
-        Enumerate available sessions.
+        Enumerate available sessions. You need admin privileges to call this function.
 
         Returns
         -------
