@@ -205,12 +205,170 @@ class TestApiFunctions(unittest.TestCase):
 
         mock_post.assert_called_once_with(
             'https://localhost:7777/api/v1',
-            json={'function': 'ApplyAdvancedGameSettings'},
+            json={'function': 'ApplyAdvancedGameSettings',
+                  'data': {'AdvancedGameSettings': advanced_game_settings.to_json()}
+                  },
             headers={'Content-Type': 'application/json'},
             files=None,
             verify=False
         )
 
+    @patch('satisfactory_api_client.api_client.requests.post')
+    def test_claim_server(self, mock_post):
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"data": {"status": "ok"}}
+
+        mock_post.return_value = mock_response
+
+        api = SatisfactoryAPI("localhost")
+        response = api.claim_server('server_name', 'server_password')
+
+        self.assertEqual(response, Response(success=True, data={'status': 'ok'}))
+
+        mock_post.assert_called_once_with(
+            'https://localhost:7777/api/v1',
+            json={'function': 'ClaimServer', 'data': {'ServerName': 'server_name', 'AdminPassword': 'server_password'}},
+            headers={'Content-Type': 'application/json'},
+            files=None,
+            verify=False
+        )
+
+    @patch('satisfactory_api_client.api_client.requests.post')
+    def test_rename_server(self, mock_post):
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"data": {"status": "ok"}}
+
+        mock_post.return_value = mock_response
+
+        api = SatisfactoryAPI("localhost")
+        response = api.rename_server('server_name')
+
+        self.assertEqual(response, Response(success=True, data={'status': 'ok'}))
+
+        mock_post.assert_called_once_with(
+            'https://localhost:7777/api/v1',
+            json={'function': 'RenameServer', 'data': {'ServerName': 'server_name'}},
+            headers={'Content-Type': 'application/json'},
+            files=None,
+            verify=False
+        )
+
+    @patch('satisfactory_api_client.api_client.requests.post')
+    def test_set_client_password(self, mock_post):
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"data": {"status": "ok"}}
+
+        mock_post.return_value = mock_response
+
+        api = SatisfactoryAPI("localhost")
+        response = api.set_client_password('password')
+
+        self.assertEqual(response, Response(success=True, data={'status': 'ok'}))
+
+        mock_post.assert_called_once_with(
+            'https://localhost:7777/api/v1',
+            json={'function': 'SetClientPassword', 'data': {'Password': 'password'}},
+            headers={'Content-Type': 'application/json'},
+            files=None,
+            verify=False
+        )
+
+    @patch('satisfactory_api_client.api_client.requests.post')
+    def test_set_admin_password(self, mock_post):
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"data": {"status": "ok"}}
+
+        mock_post.return_value = mock_response
+
+        api = SatisfactoryAPI("localhost")
+        response = api.set_admin_password('password', 'new_admin_token')
+
+        self.assertEqual(response, Response(success=True, data={'status': 'ok'}))
+
+        mock_post.assert_called_once_with(
+            'https://localhost:7777/api/v1',
+            json={'function': 'SetAdminPassword',
+                  'data': {'Password': 'password', 'AuthenticationToken': 'new_admin_token'}
+                  },
+            headers={'Content-Type': 'application/json'},
+            files=None,
+            verify=False
+        )
+
+    @patch('satisfactory_api_client.api_client.requests.post')
+    def test_set_auto_load_session_name(self, mock_post):
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"data": {"status": "ok"}}
+
+        mock_post.return_value = mock_response
+
+        api = SatisfactoryAPI("localhost")
+        response = api.set_auto_load_session_name('session_name')
+
+        self.assertEqual(response, Response(success=True, data={'status': 'ok'}))
+
+        mock_post.assert_called_once_with(
+            'https://localhost:7777/api/v1',
+            json={'function': 'SetAutoLoadSessionName', 'data': {'SessionName': 'session_name'}},
+            headers={'Content-Type': 'application/json'},
+            files=None,
+            verify=False
+        )
+
+    @patch('satisfactory_api_client.api_client.requests.post')
+    def test_run_command(self, mock_post):
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"data": {"status": "ok"}}
+
+        mock_post.return_value = mock_response
+
+        api = SatisfactoryAPI("localhost")
+        response = api.run_command('command')
+
+        self.assertEqual(response, Response(success=True, data={'status': 'ok'}))
+
+        mock_post.assert_called_once_with(
+            'https://localhost:7777/api/v1',
+            json={'function': 'RunCommand', 'data': {'Command': 'command'}},
+            headers={'Content-Type': 'application/json'},
+            files=None,
+            verify=False
+        )
+
+    @patch('satisfactory_api_client.api_client.requests.post')
+    def test_shutdown(self, mock_post):
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"data": {"status": "ok"}}
+
+        mock_post.return_value = mock_response
+
+        api = SatisfactoryAPI("localhost")
+        response = api.shutdown()
+
+        self.assertEqual(response, Response(success=True, data={'message': "Server is shutting down... Note: If the "
+                                                                           "server is configured as a service and the "
+                                                                           "restart policy is set to 'always', "
+                                                                           "it will restart automatically."
+                                                                }
+                                            )
+                         )
+
+        mock_post.assert_called_once_with(
+            'https://localhost:7777/api/v1',
+            json={'function': 'Shutdown'},
+            headers={'Content-Type': 'application/json'},
+            files=None,
+            verify=False
+        )
+
+    @patch('satisfactory_api_client.api_client.requests.post')
 
 if __name__ == "__main__":
     unittest.main()

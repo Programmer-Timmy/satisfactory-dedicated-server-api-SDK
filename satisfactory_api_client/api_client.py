@@ -356,8 +356,11 @@ class SatisfactoryAPI:
         Response
             A Response indicating the success of the operation.
         """
-        response = self._post('Shutdown')
-        return Response(success=True, data=response)
+        self._post('Shutdown')
+        return Response(success=True, data={
+            'message': "Server is shutting down... Note: If the server is configured as a service and the restart "
+                       "policy is set to 'always', it will restart automatically."
+})
 
     def apply_server_options(self, options: dict) -> Response:
         """
