@@ -222,7 +222,10 @@ class SatisfactoryAPI:
         self._post('ApplyAdvancedGameSettings', {
             'AdvancedGameSettings': settings.to_json()
         })
-        return Response(success=True, data={'message': 'Successfully applied advanced game settings'})
+        return Response(success=True, data={
+            'message': 'Successfully applied advanced game settings to the server.',
+            'settings': settings
+        })
 
     def claim_server(self, server_name: str, admin_password: str) -> Response:
         """
@@ -507,7 +510,3 @@ class SatisfactoryAPI:
             'SaveName': save_name
         })
         return Response(success=True, data=response)
-
-
-
-

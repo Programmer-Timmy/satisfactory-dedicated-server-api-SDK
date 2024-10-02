@@ -3,18 +3,18 @@ from dataclasses import dataclass, asdict
 
 @dataclass
 class AdvancedGameRules:
-    NoPower: str
-    DisableArachnidCreatures: str
-    NoUnlockCost: str
+    NoPower: bool
+    DisableArachnidCreatures: bool
+    NoUnlockCost: bool
     SetGamePhase: str
-    GiveAllTiers: str
-    UnlockAllResearchSchematics: str
-    UnlockInstantAltRecipes: str
-    UnlockAllResourceSinkSchematics: str
+    GiveAllTiers: bool
+    UnlockAllResearchSchematics: bool
+    UnlockInstantAltRecipes: bool
+    UnlockAllResourceSinkSchematics: bool
     GiveItems: str
-    NoBuildCost: str
-    GodMode: str
-    FlightMode: str
+    NoBuildCost: bool
+    GodMode: bool
+    FlightMode: bool
 
 @dataclass
 class AdvancedGameSettings:

@@ -1,7 +1,8 @@
 import unittest
 from unittest.mock import patch, MagicMock
 from satisfactory_api_client import SatisfactoryAPI
-from satisfactory_api_client.data import Response, MinimumPrivilegeLevel
+from satisfactory_api_client.data import Response, MinimumPrivilegeLevel, AdvancedGameSettings
+from satisfactory_api_client.data.advanced_game_settings import AdvancedGameRules
 
 
 class TestApiFunctions(unittest.TestCase):
@@ -31,6 +32,7 @@ class TestApiFunctions(unittest.TestCase):
             files=None,
             verify=False
         )
+
     @patch('satisfactory_api_client.api_client.requests.post')
     def test_passwordless_login(self, mock_post):
         mock_response = MagicMock()
@@ -42,7 +44,8 @@ class TestApiFunctions(unittest.TestCase):
         api = SatisfactoryAPI("localhost")
         response = api.passwordless_login(minimum_privilege_level=MinimumPrivilegeLevel.CLIENT)
 
-        self.assertEqual(response, Response(success=True, data={'message': 'Successfully logged in, the token is now stored'}))
+        self.assertEqual(response,
+                         Response(success=True, data={'message': 'Successfully logged in, the token is now stored'}))
 
         mock_post.assert_called_once_with(
             'https://localhost:7777/api/v1',
@@ -51,7 +54,6 @@ class TestApiFunctions(unittest.TestCase):
             files=None,
             verify=False
         )
-
 
     @patch('satisfactory_api_client.api_client.requests.post')
     def test_password_login(self, mock_post):
@@ -62,13 +64,15 @@ class TestApiFunctions(unittest.TestCase):
         mock_post.return_value = mock_response
 
         api = SatisfactoryAPI("localhost")
-        response = api.password_login(minimum_privilege_level=MinimumPrivilegeLevel.ADMINISTRATOR , password="password")
+        response = api.password_login(minimum_privilege_level=MinimumPrivilegeLevel.ADMINISTRATOR, password="password")
 
-        self.assertEqual(response, Response(success=True, data={'message': 'Successfully logged in, the token is now stored'}))
+        self.assertEqual(response,
+                         Response(success=True, data={'message': 'Successfully logged in, the token is now stored'}))
 
         mock_post.assert_called_once_with(
             'https://localhost:7777/api/v1',
-            json={'function': 'PasswordLogin', 'data': {'MinimumPrivilegeLevel': 'Administrator', 'Password': 'password'}},
+            json={'function': 'PasswordLogin',
+                  'data': {'MinimumPrivilegeLevel': 'Administrator', 'Password': 'password'}},
             headers={'Content-Type': 'application/json'},
             files=None,
             verify=False
@@ -137,8 +141,75 @@ class TestApiFunctions(unittest.TestCase):
             verify=False
         )
 
+    @patch('satisfactory_api_client.api_client.requests.post')
+    def test_get_advanced_game_settings(self, mock_post):
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"data": {"status": "ok"}}
 
+        mock_post.return_value = mock_response
 
+        api = SatisfactoryAPI("localhost")
+        response = api.get_advanced_game_settings()
+
+        self.assertEqual(response, Response(success=True, data={'status': 'ok'}))
+
+        mock_post.assert_called_once_with(
+            'https://localhost:7777/api/v1',
+            json={'function': 'GetAdvancedGameSettings'},
+            headers={'Content-Type': 'application/json'},
+            files=None,
+            verify=False
+        )
+
+    @patch('satisfactory_api_client.api_client.requests.post')
+    def test_apply_advanced_game_settings(self, mock_post):
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"data": {"status": "ok"}}
+
+        mock_post.return_value = mock_response
+
+        api = SatisfactoryAPI("localhost")
+
+        advanced_game_settings = AdvancedGameSettings(
+            creativeModeEnabled=True,
+            advancedGameSettings=AdvancedGameRules(
+                NoPower=True,
+                DisableArachnidCreatures=True,
+                NoUnlockCost=True,
+                SetGamePhase='1',
+                GiveAllTiers=True,
+                UnlockAllResearchSchematics=True,
+                UnlockInstantAltRecipes=True,
+                UnlockAllResourceSinkSchematics=True,
+                GiveItems='empty',
+                NoBuildCost=True,
+                GodMode=True,
+                FlightMode=True
+            )
+        )
+
+        response = api.apply_advanced_game_settings(advanced_game_settings)
+
+        self.assertEqual(
+            response,
+            Response(
+                success=True,
+                data={
+                    'message': 'Successfully applied advanced game settings to the server.',
+                    'settings': advanced_game_settings
+                }
+            )
+        )
+
+        mock_post.assert_called_once_with(
+            'https://localhost:7777/api/v1',
+            json={'function': 'ApplyAdvancedGameSettings'},
+            headers={'Content-Type': 'application/json'},
+            files=None,
+            verify=False
+        )
 
 
 if __name__ == "__main__":
