@@ -7,7 +7,19 @@ class ServerOptions:
     Represents the server settings of a Satisfactory server.
 
     Attributes
-
+    ----------
+    DSAutoPause: bool
+        If enabled, the server will automatically pause when no players are connected.
+    DSAutoSaveOnDisconnect: bool
+        If enabled, the server will automatically save when a player disconnects.
+    AutosaveInterval: float
+        The interval at which the server will automatically save the game.
+    ServerRestartTimeSlot: float
+        The time slot at which the server will restart.
+    SendGameplayData: bool
+        If enabled, the server will send gameplay data.
+    NetworkQuality: int
+        The network quality of the server.
     """
     DSAutoPause: bool
     DSAutoSaveOnDisconnect: bool

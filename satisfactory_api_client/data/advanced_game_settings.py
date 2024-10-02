@@ -7,8 +7,29 @@ class AdvancedGameSettings:
     Attributes
     ----------
     NoPower: bool
-        If enabled, power re
-
+        If enabled, power requirements are disabled.
+    DisableArachnidCreatures: bool
+        If enabled, arachnid creatures are disabled.
+    NoUnlockCost: bool
+        If enabled, unlock costs are disabled.
+    SetGamePhase: int
+        The game phase to set.
+    GiveAllTiers: bool
+        If enabled, all tiers are given.
+    UnlockAllResearchSchematics: bool
+        If enabled, all research schematics are unlocked.
+    UnlockInstantAltRecipes: bool
+        If enabled, instant alternate recipes are unlocked.
+    UnlockAllResourceSinkSchematics: bool
+        If enabled, all resource sink schematics are unlocked.
+    GiveItems: str
+        The items to give.
+    NoBuildCost: bool
+        If enabled, build costs are disabled.
+    GodMode: bool
+        If enabled, god mode is enabled.
+    FlightMode: bool
+        If enabled, flight mode is enabled.
     """
     NoPower: bool
     DisableArachnidCreatures: bool
@@ -29,7 +50,7 @@ class AdvancedGameSettings:
 
         Returns
         -------
-        str
+        dict
             The advanced game settings as a JSON string.
         """
         # Convert to a dictionary
