@@ -361,7 +361,7 @@ class SatisfactoryAPI:
         return Response(success=True, data={
             'message': "Server is shutting down... Note: If the server is configured as a service and the restart "
                        "policy is set to 'always', it will restart automatically."
-})
+        })
 
     def apply_server_options(self, options: ServerOptions) -> Response:
         """
@@ -377,10 +377,12 @@ class SatisfactoryAPI:
         Response
             A Response indicating the success of the operation.
         """
-        response = self._post('ApplyServerOptions', {
-            'UpdatedServerOptions': options
+        self._post('ApplyServerOptions', {
+            'UpdatedServerOptions': options.to_json()
         })
-        return Response(success=True, data=response)
+        return Response(success=True, data={'message': 'Successfully applied server options to the server.',
+                                            'options': options
+                                            })
 
     def create_new_game(self, game_data: NewGameData) -> Response:
         """

@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import patch, MagicMock
 from satisfactory_api_client import SatisfactoryAPI
 from satisfactory_api_client.data import Response, MinimumPrivilegeLevel, AdvancedGameSettings
-from satisfactory_api_client.data.advanced_game_settings import AdvancedGameRules
+from satisfactory_api_client.data.server_options import ServerOptions
 
 
 class TestApiFunctions(unittest.TestCase):
@@ -173,22 +173,21 @@ class TestApiFunctions(unittest.TestCase):
         api = SatisfactoryAPI("localhost")
 
         advanced_game_settings = AdvancedGameSettings(
-            creativeModeEnabled=True,
-            advancedGameSettings=AdvancedGameRules(
-                NoPower=True,
-                DisableArachnidCreatures=True,
-                NoUnlockCost=True,
-                SetGamePhase='1',
-                GiveAllTiers=True,
-                UnlockAllResearchSchematics=True,
-                UnlockInstantAltRecipes=True,
-                UnlockAllResourceSinkSchematics=True,
-                GiveItems='empty',
-                NoBuildCost=True,
-                GodMode=True,
-                FlightMode=True
-            )
+            NoPower=True,
+            DisableArachnidCreatures=True,
+            NoUnlockCost=True,
+            SetGamePhase=1,
+            GiveAllTiers=True,
+            UnlockAllResearchSchematics=True,
+            UnlockInstantAltRecipes=True,
+            UnlockAllResourceSinkSchematics=True,
+            GiveItems='empty',
+            NoBuildCost=True,
+            GodMode=True,
+            FlightMode=True
         )
+
+
 
         response = api.apply_advanced_game_settings(advanced_game_settings)
 
@@ -369,6 +368,39 @@ class TestApiFunctions(unittest.TestCase):
         )
 
     @patch('satisfactory_api_client.api_client.requests.post')
+    def test_apply_server_options(self, mock_post):
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"data": {"status": "ok"}}
+
+        mock_post.return_value = mock_response
+
+        server_options = ServerOptions(
+            DSAutoPause=True,
+            DSAutoSaveOnDisconnect=True,
+            AutosaveInterval=300,
+            ServerRestartTimeSlot=0,
+            SendGameplayData=True,
+            NetworkQuality=0
+        )
+
+
+        api = SatisfactoryAPI("localhost")
+        response = api.apply_server_options(server_options)
+
+        self.assertEqual(response, Response(success=True, data={"message": "Successfully applied server options to the server.",
+                                                                "options": server_options
+                                                                }))
+
+        mock_post.assert_called_once_with(
+            'https://localhost:7777/api/v1',
+            json={'function': 'ApplyServerOptions', 'data': {'UpdatedServerOptions': server_options.to_json()}},
+            headers={'Content-Type': 'application/json'},
+            files=None,
+            verify=False
+        )
+
+#     TODO: add test for savegames
 
 if __name__ == "__main__":
     unittest.main()
