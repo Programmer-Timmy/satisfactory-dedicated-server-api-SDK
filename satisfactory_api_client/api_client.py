@@ -4,6 +4,7 @@ from .data.advanced_game_settings import AdvancedGameSettings
 from .data.minimum_privilege_level import MinimumPrivilegeLevel
 from .data.new_game_save import NewGameData
 from .data.response import Response
+from .data.server_options import ServerOptions
 from .exceptions import APIError
 
 
@@ -362,7 +363,7 @@ class SatisfactoryAPI:
                        "policy is set to 'always', it will restart automatically."
 })
 
-    def apply_server_options(self, options: dict) -> Response:
+    def apply_server_options(self, options: ServerOptions) -> Response:
         """
         Apply server options.
 

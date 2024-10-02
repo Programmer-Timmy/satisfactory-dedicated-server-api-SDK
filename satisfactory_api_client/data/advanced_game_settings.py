@@ -1,12 +1,19 @@
-import json
 from dataclasses import dataclass, asdict
-
 @dataclass
-class AdvancedGameRules:
+class AdvancedGameSettings:
+    """
+    Represents the advanced game settings of a Satisfactory server.
+
+    Attributes
+    ----------
+    NoPower: bool
+        If enabled, power re
+
+    """
     NoPower: bool
     DisableArachnidCreatures: bool
     NoUnlockCost: bool
-    SetGamePhase: str
+    SetGamePhase: int
     GiveAllTiers: bool
     UnlockAllResearchSchematics: bool
     UnlockInstantAltRecipes: bool
@@ -15,21 +22,6 @@ class AdvancedGameRules:
     NoBuildCost: bool
     GodMode: bool
     FlightMode: bool
-
-@dataclass
-class AdvancedGameSettings:
-    """
-    Represents the advanced game settings of a Satisfactory server.
-
-    Attributes
-    ----------
-    creativeModeEnabled : bool
-        Whether or not creative mode is enabled.
-    advancedGameSettings : AdvancedGameRules
-        The advanced game settings.
-    """
-    creativeModeEnabled: bool
-    advancedGameSettings: AdvancedGameRules
 
     def to_json(self) -> dict:
         """
@@ -44,8 +36,7 @@ class AdvancedGameSettings:
         settings_dict = asdict(self)
         # Create a new dictionary with dot notation
         return {
-            "creativeModeEnabled": settings_dict["creativeModeEnabled"],
             "advancedGameSettings": {
-                f"FG.GameRules.{key}": value for key, value in settings_dict["advancedGameSettings"].items()
+                f"FG.GameRules.{str(key)}": value for key, value in settings_dict.items()
             }
         }
