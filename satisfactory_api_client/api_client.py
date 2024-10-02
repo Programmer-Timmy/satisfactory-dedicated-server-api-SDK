@@ -62,40 +62,9 @@ class SatisfactoryAPI:
 
         if response.status_code == 204:
             return {}
-
         if response.json().get('errorCode'):
             raise APIError(response.json().get('errorMessage'))
         return response.json().get('data')
-
-    def _get(self, function, data=None):
-        """
-        Get a request to the API
-
-        :param function: The function to call
-        :param data: The data to send
-        :return: The response
-        :rtype: dict
-
-        :raises APIError: If the API returns an error
-        """
-        url = f"https://{self.host}:{self.port}/api/v1"
-        headers = {'Content-Type': 'application/json'}
-
-        if self.auth_token:
-            headers['Authorization'] = f'Bearer {self.auth_token}'
-
-        payload = {'function': function, 'data': data} if data else {'function': function}
-
-        response = requests.get(url, json=payload, headers=headers, verify=False)
-        if response.status_code != 200 and response.status_code != 204:
-            raise APIError(f"API error: {response.text}")
-
-        if response.status_code == 204:
-            return {}
-
-        if response.json().get('errorCode'):
-            raise APIError(response.json().get('errorMessage'))
-        return response.json()
 
     def health_check(self, client_custom_data='') -> (
             Response):
@@ -233,8 +202,8 @@ class SatisfactoryAPI:
         Response
             A Response containing the advanced game settings.
         """
-        response = self._get('GetAdvancedGameSettings')
-        return Response(success=True, data=response['data'])
+        response = self._post('GetAdvancedGameSettings')
+        return Response(success=True, data=response)
 
     def apply_advanced_game_settings(self, settings: AdvancedGameSettings) -> Response:
         """
@@ -253,7 +222,7 @@ class SatisfactoryAPI:
         response = self._post('ApplyAdvancedGameSettings', {
             'AppliedAdvancedGameSettings': settings.__dict__  # Convert dataclass to dict
         })
-        return Response(success=True, data=response['data'])
+        return Response(success=True, data=response)
 
     def claim_server(self, server_name: str, admin_password: str) -> Response:
         """
@@ -275,7 +244,7 @@ class SatisfactoryAPI:
             'ServerName': server_name,
             'AdminPassword': admin_password
         })
-        return Response(success=True, data=response['data'])
+        return Response(success=True, data=response)
 
     def rename_server(self, server_name: str) -> Response:
         """
@@ -294,7 +263,7 @@ class SatisfactoryAPI:
         response = self._post('RenameServer', {
             'ServerName': server_name
         })
-        return Response(success=True, data=response['data'])
+        return Response(success=True, data=response)
 
     def set_client_password(self, password: str) -> Response:
         """
@@ -313,7 +282,7 @@ class SatisfactoryAPI:
         response = self._post('SetClientPassword', {
             'Password': password
         })
-        return Response(success=True, data=response['data'])
+        return Response(success=True, data=response)
 
     def set_admin_password(self, password: str, auth_token: str) -> Response:
         """
@@ -335,7 +304,7 @@ class SatisfactoryAPI:
             'Password': password,
             'AuthenticationToken': auth_token
         })
-        return Response(success=True, data=response['data'])
+        return Response(success=True, data=response)
 
     def set_auto_load_session_name(self, session_name: str) -> Response:
         """
@@ -354,7 +323,7 @@ class SatisfactoryAPI:
         response = self._post('SetAutoLoadSessionName', {
             'SessionName': session_name
         })
-        return Response(success=True, data=response['data'])
+        return Response(success=True, data=response)
 
     def run_command(self, command: str) -> Response:
         """
@@ -373,7 +342,7 @@ class SatisfactoryAPI:
         response = self._post('RunCommand', {
             'Command': command
         })
-        return Response(success=True, data=response['data'])
+        return Response(success=True, data=response)
 
     def shutdown(self) -> Response:
         """
@@ -385,7 +354,7 @@ class SatisfactoryAPI:
             A Response indicating the success of the operation.
         """
         response = self._post('Shutdown')
-        return Response(success=True, data=response['data'])
+        return Response(success=True, data=response)
 
     def apply_server_options(self, options: dict) -> Response:
         """
@@ -404,7 +373,7 @@ class SatisfactoryAPI:
         response = self._post('ApplyServerOptions', {
             'UpdatedServerOptions': options
         })
-        return Response(success=True, data=response['data'])
+        return Response(success=True, data=response)
 
     def create_new_game(self, game_data: NewGameData) -> Response:
         """
@@ -423,7 +392,7 @@ class SatisfactoryAPI:
         response = self._post('CreateNewGame', {
             'NewGameData': game_data.__dict__  # Convert dataclass to dict
         })
-        return Response(success=True, data=response['data'])
+        return Response(success=True, data=response)
 
     def save_game(self, save_name: str) -> Response:
         """
@@ -442,7 +411,7 @@ class SatisfactoryAPI:
         response = self._post('SaveGame', {
             'SaveName': save_name
         })
-        return Response(success=True, data=response['data'])
+        return Response(success=True, data=response)
 
     def delete_save_file(self, save_name: str) -> Response:
         """
@@ -461,7 +430,7 @@ class SatisfactoryAPI:
         response = self._post('DeleteSaveFile', {
             'SaveName': save_name
         })
-        return Response(success=True, data=response['data'])
+        return Response(success=True, data=response)
 
     def delete_save_session(self, session_name: str) -> Response:
         """
@@ -480,7 +449,7 @@ class SatisfactoryAPI:
         response = self._post('DeleteSaveSession', {
             'SessionName': session_name
         })
-        return Response(success=True, data=response['data'])
+        return Response(success=True, data=response)
 
     def enumerate_sessions(self) -> Response:
         """
@@ -491,8 +460,8 @@ class SatisfactoryAPI:
         Response
             A Response containing the available sessions.
         """
-        response = self._get('EnumerateSessions')
-        return Response(success=True, data=response['data'])
+        response = self._post('EnumerateSessions')
+        return Response(success=True, data=response)
 
     def load_game(self, save_name: str, enable_advanced_game_settings: bool = False) -> Response:
         """
@@ -514,7 +483,7 @@ class SatisfactoryAPI:
             'SaveName': save_name,
             'EnableAdvancedGameSettings': enable_advanced_game_settings
         })
-        return Response(success=True, data=response['data'])
+        return Response(success=True, data=response)
 
     def upload_save_game(self, save_name: str, load_save_game: bool = False,
                          enable_advanced_game_settings: bool = False) -> Response:
@@ -534,10 +503,10 @@ class SatisfactoryAPI:
         Response
             A Response indicating the success of the download operation.
         """
-        response = self._get('DownloadSaveGame', {
+        response = self._post('DownloadSaveGame', {
             'SaveName': save_name
         })
-        return Response(success=True, data=response['data'])
+        return Response(success=True, data=response)
 
 
 

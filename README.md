@@ -56,6 +56,10 @@ response = api.passwordless_login(MinimumPrivilegeLevel.ADMIN)
 
 # Password login
 response = api.password_login(MinimumPrivilegeLevel.ADMIN, password='your-admin-password')
+
+# You can check if the token is valid by
+response = api.verify_authentication_token()
+print(response.data)
 ```
 
 #### Minimum Privilege Levels
@@ -156,6 +160,7 @@ response = api.shutdown()
 
 - `passwordless_login(minimum_privilege_level: MinimumPrivilegeLevel)`: Log in without a password to obtain a token that is automatically saved.
 - `password_login(minimum_privilege_level: MinimumPrivilegeLevel, password: str)`: Log in using a password to obtain a token that is automatically saved.
+- `verify_authentication_token()`: Verify that the current token is valid.
 
 ### Server Management
 
