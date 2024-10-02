@@ -31,7 +31,7 @@ class AdvancedGameSettings:
     creativeModeEnabled: bool
     advancedGameSettings: AdvancedGameRules
 
-    def to_json(self) -> str:
+    def to_json(self) -> dict:
         """
         Converts the advanced game settings to a JSON string.
 
@@ -43,11 +43,9 @@ class AdvancedGameSettings:
         # Convert to a dictionary
         settings_dict = asdict(self)
         # Create a new dictionary with dot notation
-        formatted_dict = {
+        return {
             "creativeModeEnabled": settings_dict["creativeModeEnabled"],
             "advancedGameSettings": {
                 f"FG.GameRules.{key}": value for key, value in settings_dict["advancedGameSettings"].items()
             }
         }
-        # Convert the formatted dictionary to a JSON string
-        return json.dumps(formatted_dict, indent=4)
