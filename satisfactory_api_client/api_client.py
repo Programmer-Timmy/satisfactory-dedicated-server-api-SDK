@@ -128,7 +128,7 @@ class SatisfactoryAPI:
         """
         response = self._post('PasswordlessLogin', {'MinimumPrivilegeLevel': minimum_privilege_level.value})
         self.auth_token = response['authenticationToken']
-        return Response(success=True, data=self.auth_token)
+        return Response(success=True, data={'message': 'Successfully logged in, the token is now stored'})
 
     def password_login(self, minimum_privilege_level: MinimumPrivilegeLevel, password: str) -> Response:
         """
@@ -219,10 +219,10 @@ class SatisfactoryAPI:
         Response
             A Response indicating the success of the operation.
         """
-        response = self._post('ApplyAdvancedGameSettings', {
+        self._post('ApplyAdvancedGameSettings', {
             'AppliedAdvancedGameSettings': settings.__dict__  # Convert dataclass to dict
         })
-        return Response(success=True, data=response)
+        return Response(success=True, data={'message': 'Successfully applied advanced game settings'})
 
     def claim_server(self, server_name: str, admin_password: str) -> Response:
         """

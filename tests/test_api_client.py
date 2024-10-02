@@ -10,9 +10,6 @@ class TestAPIClient(unittest.TestCase):
         client = SatisfactoryAPI("localhost", port=1234)
         self.assertEqual(client.port, 1234)
 
-    def test_post(self):
-       pass
-
 
 if __name__ == "__main__":
     unittest.main()
