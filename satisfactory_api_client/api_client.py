@@ -57,15 +57,25 @@ class SatisfactoryAPI:
 
         payload = {'function': function, 'data': data} if data else {'function': function}
 
-        response = requests.post(url, json=payload, headers=headers, files=files, verify=False)
+        response = requests.post(url, json=payload, headers=headers, files=files, verify=False, stream=True)
         if response.status_code != 200 and response.status_code != 204:
             raise APIError(f"API error: {response.text}")
 
         if response.status_code == 204:
             return {}
-        if response.json().get('errorCode'):
-            raise APIError(response.json().get('errorMessage'))
-        return response.json().get('data')
+
+        # if response is not json, return the text
+        print(response.headers.get('Content-Type'))
+        #  use switch
+        match response.headers.get('Content-Type'):
+            case 'application/json;charset=utf-8':
+                if response.json().get('errorCode'):
+                    raise APIError(response.json().get('errorMessage'))
+                return response.json().get('data')
+            case 'application/octet-stream':
+                return response.content
+            case _:
+                return response.text
 
     def health_check(self, client_custom_data='') -> (
             Response):
@@ -510,7 +520,7 @@ class SatisfactoryAPI:
         Returns
         -------
         Response
-            A Response indicating the success of the download operation.
+            A Response indicating the success and the save game in bytes.
         """
         response = self._post('DownloadSaveGame', {
             'SaveName': save_name
