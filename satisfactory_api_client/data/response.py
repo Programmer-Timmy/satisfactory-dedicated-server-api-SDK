@@ -10,8 +10,8 @@ class Response:
     ----------
     success : bool
         Whether the request was successful.
-    data : dict
+    data : dict | str
         The data returned from the API.
     """
     success: bool
-    data: dict
+    data: dict | bytes
