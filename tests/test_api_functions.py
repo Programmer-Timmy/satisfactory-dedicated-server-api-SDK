@@ -11,7 +11,8 @@ class TestApiFunctions(unittest.TestCase):
         # Create a mock response object
         self.mock_response = MagicMock()
         self.mock_response.status_code = 200  # Set status code to 200
-        self.mock_response.json.return_value = {"data": {"status": "ok"}}  # Set the JSON response
+        self.mock_response.json.return_value = {"data": {"status": "ok"}}
+        self.mock_response.headers = {'Content-Type': 'application/json;charset=utf-8'}  # Set the JSON response
 
     @patch('satisfactory_api_client.api_client.requests.post')
     def test_health_check(self, mock_post):
@@ -30,7 +31,8 @@ class TestApiFunctions(unittest.TestCase):
             json={'function': 'HealthCheck', 'data': {'ClientCustomData': ''}},
             headers={'Content-Type': 'application/json'},
             files=None,
-            verify=False
+            verify=False,
+            stream=True
         )
 
     @patch('satisfactory_api_client.api_client.requests.post')
@@ -52,7 +54,8 @@ class TestApiFunctions(unittest.TestCase):
             json={'function': 'PasswordlessLogin', 'data': {'MinimumPrivilegeLevel': 'Client'}},
             headers={'Content-Type': 'application/json'},
             files=None,
-            verify=False
+            verify=False,
+            stream=True
         )
 
     @patch('satisfactory_api_client.api_client.requests.post')
@@ -71,11 +74,11 @@ class TestApiFunctions(unittest.TestCase):
 
         mock_post.assert_called_once_with(
             'https://localhost:7777/api/v1',
-            json={'function': 'PasswordLogin',
-                  'data': {'MinimumPrivilegeLevel': 'Administrator', 'Password': 'password'}},
+            json={'function': 'PasswordLogin', 'data': {'MinimumPrivilegeLevel': 'Administrator', 'Password': 'password'}},
             headers={'Content-Type': 'application/json'},
             files=None,
-            verify=False
+            verify=False,
+            stream=True
         )
 
     @patch('satisfactory_api_client.api_client.requests.post')
@@ -83,6 +86,7 @@ class TestApiFunctions(unittest.TestCase):
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.json.return_value = {"data": {"status": "ok"}}
+        mock_response.headers = {'Content-Type': 'application/json;charset=utf-8'}
 
         mock_post.return_value = mock_response
 
@@ -96,7 +100,8 @@ class TestApiFunctions(unittest.TestCase):
             json={'function': 'VerifyAuthenticationToken'},
             headers={'Content-Type': 'application/json'},
             files=None,
-            verify=False
+            verify=False,
+            stream=True
         )
 
     @patch('satisfactory_api_client.api_client.requests.post')
@@ -104,6 +109,7 @@ class TestApiFunctions(unittest.TestCase):
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.json.return_value = {"data": {"status": "ok"}}
+        mock_response.headers = {'Content-Type': 'application/json;charset=utf-8'}
 
         mock_post.return_value = mock_response
 
@@ -117,7 +123,8 @@ class TestApiFunctions(unittest.TestCase):
             json={'function': 'QueryServerState'},
             headers={'Content-Type': 'application/json'},
             files=None,
-            verify=False
+            verify=False,
+            stream=True
         )
 
     @patch('satisfactory_api_client.api_client.requests.post')
@@ -125,6 +132,7 @@ class TestApiFunctions(unittest.TestCase):
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.json.return_value = {"data": {"status": "ok"}}
+        mock_response.headers = {'Content-Type': 'application/json;charset=utf-8'}
 
         mock_post.return_value = mock_response
 
@@ -138,7 +146,8 @@ class TestApiFunctions(unittest.TestCase):
             json={'function': 'GetServerOptions'},
             headers={'Content-Type': 'application/json'},
             files=None,
-            verify=False
+            verify=False,
+            stream=True
         )
 
     @patch('satisfactory_api_client.api_client.requests.post')
@@ -146,6 +155,7 @@ class TestApiFunctions(unittest.TestCase):
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.json.return_value = {"data": {"status": "ok"}}
+        mock_response.headers = {'Content-Type': 'application/json;charset=utf-8'}
 
         mock_post.return_value = mock_response
 
@@ -159,7 +169,8 @@ class TestApiFunctions(unittest.TestCase):
             json={'function': 'GetAdvancedGameSettings'},
             headers={'Content-Type': 'application/json'},
             files=None,
-            verify=False
+            verify=False,
+            stream=True
         )
 
     @patch('satisfactory_api_client.api_client.requests.post')
@@ -167,6 +178,7 @@ class TestApiFunctions(unittest.TestCase):
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.json.return_value = {"data": {"status": "ok"}}
+        mock_response.headers = {'Content-Type': 'application/json;charset=utf-8'}
 
         mock_post.return_value = mock_response
 
@@ -209,7 +221,8 @@ class TestApiFunctions(unittest.TestCase):
                   },
             headers={'Content-Type': 'application/json'},
             files=None,
-            verify=False
+            verify=False,
+            stream=True
         )
 
     @patch('satisfactory_api_client.api_client.requests.post')
@@ -217,6 +230,7 @@ class TestApiFunctions(unittest.TestCase):
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.json.return_value = {"data": {"status": "ok"}}
+        mock_response.headers = {'Content-Type': 'application/json;charset=utf-8'}
 
         mock_post.return_value = mock_response
 
@@ -230,7 +244,8 @@ class TestApiFunctions(unittest.TestCase):
             json={'function': 'ClaimServer', 'data': {'ServerName': 'server_name', 'AdminPassword': 'server_password'}},
             headers={'Content-Type': 'application/json'},
             files=None,
-            verify=False
+            verify=False,
+            stream=True
         )
 
     @patch('satisfactory_api_client.api_client.requests.post')
@@ -238,6 +253,7 @@ class TestApiFunctions(unittest.TestCase):
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.json.return_value = {"data": {"status": "ok"}}
+        mock_response.headers = {'Content-Type': 'application/json;charset=utf-8'}
 
         mock_post.return_value = mock_response
 
@@ -251,7 +267,8 @@ class TestApiFunctions(unittest.TestCase):
             json={'function': 'RenameServer', 'data': {'ServerName': 'server_name'}},
             headers={'Content-Type': 'application/json'},
             files=None,
-            verify=False
+            verify=False,
+            stream=True
         )
 
     @patch('satisfactory_api_client.api_client.requests.post')
@@ -259,6 +276,7 @@ class TestApiFunctions(unittest.TestCase):
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.json.return_value = {"data": {"status": "ok"}}
+        mock_response.headers = {'Content-Type': 'application/json;charset=utf-8'}
 
         mock_post.return_value = mock_response
 
@@ -272,7 +290,8 @@ class TestApiFunctions(unittest.TestCase):
             json={'function': 'SetClientPassword', 'data': {'Password': 'password'}},
             headers={'Content-Type': 'application/json'},
             files=None,
-            verify=False
+            verify=False,
+            stream=True
         )
 
     @patch('satisfactory_api_client.api_client.requests.post')
@@ -280,6 +299,7 @@ class TestApiFunctions(unittest.TestCase):
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.json.return_value = {"data": {"status": "ok"}}
+        mock_response.headers = {'Content-Type': 'application/json;charset=utf-8'}
 
         mock_post.return_value = mock_response
 
@@ -295,7 +315,8 @@ class TestApiFunctions(unittest.TestCase):
                   },
             headers={'Content-Type': 'application/json'},
             files=None,
-            verify=False
+            verify=False,
+            stream=True
         )
 
     @patch('satisfactory_api_client.api_client.requests.post')
@@ -303,6 +324,7 @@ class TestApiFunctions(unittest.TestCase):
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.json.return_value = {"data": {"status": "ok"}}
+        mock_response.headers = {'Content-Type': 'application/json;charset=utf-8'}
 
         mock_post.return_value = mock_response
 
@@ -316,7 +338,8 @@ class TestApiFunctions(unittest.TestCase):
             json={'function': 'SetAutoLoadSessionName', 'data': {'SessionName': 'session_name'}},
             headers={'Content-Type': 'application/json'},
             files=None,
-            verify=False
+            verify=False,
+            stream=True
         )
 
     @patch('satisfactory_api_client.api_client.requests.post')
@@ -324,6 +347,7 @@ class TestApiFunctions(unittest.TestCase):
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.json.return_value = {"data": {"status": "ok"}}
+        mock_response.headers = {'Content-Type': 'application/json;charset=utf-8'}
 
         mock_post.return_value = mock_response
 
@@ -337,7 +361,8 @@ class TestApiFunctions(unittest.TestCase):
             json={'function': 'RunCommand', 'data': {'Command': 'command'}},
             headers={'Content-Type': 'application/json'},
             files=None,
-            verify=False
+            verify=False,
+            stream=True
         )
 
     @patch('satisfactory_api_client.api_client.requests.post')
@@ -345,6 +370,7 @@ class TestApiFunctions(unittest.TestCase):
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.json.return_value = {"data": {"status": "ok"}}
+        mock_response.headers = {'Content-Type': 'application/json;charset=utf-8'}
 
         mock_post.return_value = mock_response
 
@@ -364,7 +390,8 @@ class TestApiFunctions(unittest.TestCase):
             json={'function': 'Shutdown'},
             headers={'Content-Type': 'application/json'},
             files=None,
-            verify=False
+            verify=False,
+            stream=True
         )
 
     @patch('satisfactory_api_client.api_client.requests.post')
@@ -372,6 +399,7 @@ class TestApiFunctions(unittest.TestCase):
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.json.return_value = {"data": {"status": "ok"}}
+        mock_response.headers = {'Content-Type': 'application/json;charset=utf-8'}
 
         mock_post.return_value = mock_response
 
@@ -397,7 +425,8 @@ class TestApiFunctions(unittest.TestCase):
             json={'function': 'ApplyServerOptions', 'data': {'UpdatedServerOptions': server_options.to_json()}},
             headers={'Content-Type': 'application/json'},
             files=None,
-            verify=False
+            verify=False,
+            stream=True
         )
 
 #     TODO: add test for savegames
