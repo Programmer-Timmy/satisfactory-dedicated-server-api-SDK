@@ -22,7 +22,7 @@ pip install satisfactory-api-client
 
 ## Requirements
 
-- Python 3.8+
+- Python 3.10+
 - `requests` library
 
 ## Usage
