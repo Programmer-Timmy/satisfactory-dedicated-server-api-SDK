@@ -59,13 +59,14 @@ class SatisfactoryAPI:
 
         response = requests.post(url, json=payload, headers=headers, files=files, verify=False, stream=True)
         if response.status_code != 200 and response.status_code != 204:
-            raise APIError(f"API error: {response.text}")
+            raise APIError(
+                error_code=response.json().get('errorCode'),
+                message=response.json().get('errorMessage')
+            )
 
         if response.status_code == 204:
             return {}
 
-        # if response is not json, return the text
-        print(response.headers.get('Content-Type'))
         #  use switch
         match response.headers.get('Content-Type'):
             case 'application/json;charset=utf-8':
