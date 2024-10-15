@@ -6,43 +6,46 @@ class ServerOptions:
     """
     Represents the server settings of a Satisfactory server.
 
+    You only need to set the attributes you want to change.
+
     Attributes
     ----------
-    DSAutoPause: bool
+    DSAutoPause: bool | None
         If enabled, the server will automatically pause when no players are connected.
-    DSAutoSaveOnDisconnect: bool
+
+    DSAutoSaveOnDisconnect: bool | None
         If enabled, the server will automatically save when a player disconnects.
-    AutosaveInterval: float
+
+    AutosaveInterval: float | None
         The interval at which the server will automatically save the game.
-    ServerRestartTimeSlot: float
+
+    ServerRestartTimeSlot: float | None
         The time slot at which the server will restart.
-    SendGameplayData: bool
+
+    SendGameplayData: bool | None
         If enabled, the server will send gameplay data.
-    NetworkQuality: int
+
+    NetworkQuality: int | None
         The network quality of the server.
     """
-    DSAutoPause: bool
-    DSAutoSaveOnDisconnect: bool
-    AutosaveInterval: float
-    ServerRestartTimeSlot: float
-    SendGameplayData: bool
-    NetworkQuality: int
+    DSAutoPause: bool | None = None
+    DSAutoSaveOnDisconnect: bool | None = None
+    AutosaveInterval: float | None = None
+    ServerRestartTimeSlot: float | None = None
+    SendGameplayData: bool | None = None
+    NetworkQuality: int | None = None
 
-    def to_json(self) -> dict:
+    def to_dict(self) -> dict:
         """
-        Converts the server settings to a JSON string.
+        Converts the server settings to a dictionary in the required format.
 
         Returns
         -------
-        str
-            The server settings as a JSON string.
+        dict
+            The server settings as a dictionary.
         """
-        # Convert to a dictionary
         settings_dict = self.__dict__
-        # Create a new dictionary with dot notation
         return {
-            "serverOptions": {
-                f"FG.{str(key)}": value for key, value in settings_dict.items()
-            }
+            f"FG.{str(key)}": str(value) for key, value in settings_dict.items() if value is not None
         }
 

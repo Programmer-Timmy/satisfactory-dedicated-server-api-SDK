@@ -58,6 +58,7 @@ class SatisfactoryAPI:
         payload = {'function': function, 'data': data} if data else {'function': function}
 
         response = requests.post(url, json=payload, headers=headers, files=files, verify=False, stream=True)
+        print(response)
         if response.status_code != 200 and response.status_code != 204:
             raise APIError(
                 error_code=response.json().get('errorCode'),
@@ -232,11 +233,11 @@ class SatisfactoryAPI:
             A Response indicating the success of the operation.
         """
         self._post('ApplyAdvancedGameSettings', {
-            'AdvancedGameSettings': settings.to_json()
+            'AdvancedGameSettings': settings.to_dict()
         })
         return Response(success=True, data={
             'message': 'Successfully applied advanced game settings to the server.',
-            'settings': settings
+            'settings': settings.to_dict()
         })
 
     def claim_server(self, server_name: str, admin_password: str) -> Response:
@@ -388,11 +389,11 @@ class SatisfactoryAPI:
         Response
             A Response indicating the success of the operation.
         """
-        self._post('ApplyServerOptions', {
-            'UpdatedServerOptions': options.to_json()
-        })
+        print(self._post('ApplyServerOptions', {
+            'UpdatedServerOptions': options.to_dict()
+        }))
         return Response(success=True, data={'message': 'Successfully applied server options to the server.',
-                                            'options': options
+                                            'options': options.to_dict()
                                             })
 
     def create_new_game(self, game_data: NewGameData) -> Response:
