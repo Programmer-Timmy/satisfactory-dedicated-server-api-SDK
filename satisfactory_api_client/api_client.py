@@ -58,7 +58,6 @@ class SatisfactoryAPI:
         payload = {'function': function, 'data': data} if data else {'function': function}
 
         response = requests.post(url, json=payload, headers=headers, files=files, verify=False, stream=True)
-        print(response)
         if response.status_code != 200 and response.status_code != 204:
             raise APIError(
                 error_code=response.json().get('errorCode'),
