@@ -209,7 +209,7 @@ class TestApiFunctions(unittest.TestCase):
                 success=True,
                 data={
                     'message': 'Successfully applied advanced game settings to the server.',
-                    'settings': advanced_game_settings
+                    'settings': advanced_game_settings.to_dict()
                 }
             )
         )
@@ -217,7 +217,7 @@ class TestApiFunctions(unittest.TestCase):
         mock_post.assert_called_once_with(
             'https://localhost:7777/api/v1',
             json={'function': 'ApplyAdvancedGameSettings',
-                  'data': {'AdvancedGameSettings': advanced_game_settings.to_json()}
+                  'data': {'AdvancedGameSettings': advanced_game_settings.to_dict()}
                   },
             headers={'Content-Type': 'application/json'},
             files=None,
@@ -417,12 +417,12 @@ class TestApiFunctions(unittest.TestCase):
         response = api.apply_server_options(server_options)
 
         self.assertEqual(response, Response(success=True, data={"message": "Successfully applied server options to the server.",
-                                                                "options": server_options
+                                                                "options": server_options.to_dict()
                                                                 }))
 
         mock_post.assert_called_once_with(
             'https://localhost:7777/api/v1',
-            json={'function': 'ApplyServerOptions', 'data': {'UpdatedServerOptions': server_options.to_json()}},
+            json={'function': 'ApplyServerOptions', 'data': {'UpdatedServerOptions': server_options.to_dict()}},
             headers={'Content-Type': 'application/json'},
             files=None,
             verify=False,

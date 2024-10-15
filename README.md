@@ -179,7 +179,7 @@ response = api.shutdown()
 ### Server Settings
 
 - `get_server_options()`: Get current server settings. This includes the server name, description, and other options.
-- `apply_server_options(options: dict)`: Apply new server settings. This will update the server options with the specified values.
+- `apply_server_options(options: ServerOptions)`: Apply new server settings. This will update the server options with the specified values.
 - `get_advanced_game_settings()`: Get advanced game settings. This includes settings such as resource settings, enemy settings, and other advanced options.
 - `apply_advanced_game_settings(settings: AdvancedGameSettings)`: Apply new advanced game settings. This will update the advanced game settings with the specified values.
 
