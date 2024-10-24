@@ -12,7 +12,6 @@ setup(
     packages=find_packages(exclude=['tests', 'examples']),
     install_requires=[
         "python-dotenv~=1.0.1",
-        "urllib3~=2.2.3",
         "requests~=2.32.3"
     ],
     description='A Python Package for interacting with the Satisfactory Dedicated Server API',
