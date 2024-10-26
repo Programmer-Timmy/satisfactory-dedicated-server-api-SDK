@@ -52,10 +52,10 @@ You can log in to the server using passwordless or password-based methods.
 from satisfactory_api_client.data import MinimumPrivilegeLevel
 
 # Passwordless login
-response = api.passwordless_login(MinimumPrivilegeLevel.ADMIN)
+response = api.passwordless_login(MinimumPrivilegeLevel.ADMINISTRATOR)
 
 # Password login
-response = api.password_login(MinimumPrivilegeLevel.ADMIN, password='your-admin-password')
+response = api.password_login(MinimumPrivilegeLevel.ADMINISTRATOR, password='your-admin-password')
 
 # You can check if the token is valid by
 response = api.verify_authentication_token()
