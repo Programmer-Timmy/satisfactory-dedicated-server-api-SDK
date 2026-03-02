@@ -1,7 +1,8 @@
+import asyncio
 import os
 import ssl
 
-import requests
+import aiohttp
 
 from .data.advanced_game_settings import AdvancedGameSettings
 from .data.minimum_privilege_level import MinimumPrivilegeLevel
@@ -11,12 +12,12 @@ from .data.server_options import ServerOptions
 from .exceptions import APIError
 
 
-class SatisfactoryAPI:
-    """ A client for the Satisfactory Dedicated Server API """
+class AsyncSatisfactoryAPI:
+    """ An async client for the Satisfactory Dedicated Server API """
 
     def __init__(self, host: str, port: int = 7777, auth_token: str = None, skip_ssl_verification: bool = False):
         """
-        Initialize the API client
+        Initialize the async API client
 
         Parameters
         ----------
@@ -30,22 +31,20 @@ class SatisfactoryAPI:
         skip_ssl_verification : bool, optional
             Disable SSL certificate verification entirely, by default False.
             When True, ``init_certificate`` has no effect and all requests skip verification.
-
-        Raises
-        ------
-        APIError
-            If the authentication token is invalid
         """
         self.host: str = host
         self.port: int = port
         self.auth_token: str | None = auth_token
         self.skip_ssl_verification: bool = skip_ssl_verification
         self.cert_path: str | None = None
+        self._ssl_context: ssl.SSLContext | None = None
 
-        if self.auth_token:
-            self.verify_authentication_token()
+    def _get_ssl(self) -> ssl.SSLContext | bool:
+        if self.skip_ssl_verification:
+            return False
+        return self._ssl_context or False
 
-    def init_certificate(self) -> None:
+    async def init_certificate(self) -> None:
         """
         Fetch and cache the server's SSL certificate for verified HTTPS requests.
 
@@ -62,20 +61,24 @@ class SatisfactoryAPI:
         """
         if self.skip_ssl_verification:
             raise RuntimeError("Cannot initialise certificate while skip_ssl_verification is enabled.")
+
         certs_dir = os.path.join(os.path.dirname(__file__), 'certs')
         os.makedirs(certs_dir, exist_ok=True)
 
         cert_path = os.path.join(certs_dir, f"{self.host.replace('.', '_')}_{self.port}.pem")
 
         if not os.path.exists(cert_path):
-            pem_cert = ssl.get_server_certificate((self.host, self.port))
+            pem_cert = await asyncio.to_thread(ssl.get_server_certificate, (self.host, self.port))
             with open(cert_path, 'w') as f:
                 f.write(pem_cert)
             print(f"Certificate saved to {cert_path}")
 
         self.cert_path = cert_path
+        ctx = ssl.create_default_context()
+        ctx.load_verify_locations(cert_path)
+        self._ssl_context = ctx
 
-    def _post(self, func, data=None, files=None):
+    async def _post(self, func, data=None, files=None):
         """
         Post a request to the API
 
@@ -104,32 +107,32 @@ class SatisfactoryAPI:
 
         payload = {'function': func, 'data': data} if data is not None else {'function': func}
 
-        verify = False if self.skip_ssl_verification else (self.cert_path or False)
-        response = requests.post(url, json=payload, headers=headers, files=files, verify=verify, stream=True)
-        if response.status_code != 200 and response.status_code != 204:
-            raise APIError(
-                error_code=response.json().get('errorCode'),
-                message=response.json().get('errorMessage')
-            )
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, json=payload, headers=headers, ssl=self._get_ssl()) as response:
+                if response.status not in (200, 204):
+                    error_data = await response.json(content_type=None)
+                    raise APIError(
+                        error_code=error_data.get('errorCode'),
+                        message=error_data.get('errorMessage')
+                    )
 
-        if response.status_code == 204:
-            return {}
+                if response.status == 204:
+                    return {}
 
-        #  use switch
-        match response.headers.get('Content-Type'):
-            case 'application/json;charset=utf-8':
-                if response.json().get('errorCode'):
-                    raise APIError(response.json().get('errorMessage'))
-                return response.json().get('data')
-            case 'application/octet-stream':
-                return response.content
-            case _:
-                return response.text
+                content_type = response.headers.get('Content-Type', '')
+                if 'application/json' in content_type:
+                    result = await response.json(content_type=None)
+                    if result.get('errorCode'):
+                        raise APIError(result.get('errorMessage'))
+                    return result.get('data')
+                elif content_type == 'application/octet-stream':
+                    return await response.read()
+                else:
+                    return await response.text()
 
-    def health_check(self, client_custom_data='') -> (
-            Response):
+    async def health_check(self, client_custom_data: str = '') -> Response:
         """
-        Perform a health check on the server. This function is used to check if the server is running and if the API is.
+        Perform a health check on the server.
 
         Parameters
         ----------
@@ -146,12 +149,12 @@ class SatisfactoryAPI:
         APIError
             If the API returns an error
         """
-        response = self._post('HealthCheck', {'ClientCustomData': client_custom_data})
+        response = await self._post('HealthCheck', {'ClientCustomData': client_custom_data})
         return Response(success=True, data=response)
 
-    def verify_authentication_token(self) -> Response:
+    async def verify_authentication_token(self) -> Response:
         """
-        Verify the authentication token
+        Verify the authentication token.
 
         Returns
         -------
@@ -163,10 +166,10 @@ class SatisfactoryAPI:
         APIError
             If the API returns an error or if the token is invalid.
         """
-        self._post('VerifyAuthenticationToken')
+        await self._post('VerifyAuthenticationToken')
         return Response(success=True, data={'message': 'Token is valid'})
 
-    def passwordless_login(self, minimum_privilege_level: MinimumPrivilegeLevel) -> Response:
+    async def passwordless_login(self, minimum_privilege_level: MinimumPrivilegeLevel) -> Response:
         """
         Perform a passwordless login and store the authentication token.
 
@@ -183,14 +186,13 @@ class SatisfactoryAPI:
         Raises
         ------
         APIError
-            If the API returns an error or if the login is unsuccessful
-            (e.g., incorrect password or insufficient privileges).
+            If the API returns an error or if the login is unsuccessful.
         """
-        response = self._post('PasswordlessLogin', {'MinimumPrivilegeLevel': minimum_privilege_level.value})
+        response = await self._post('PasswordlessLogin', {'MinimumPrivilegeLevel': minimum_privilege_level.value})
         self.auth_token = response['authenticationToken']
         return Response(success=True, data={'message': 'Successfully logged in, the token is now stored'})
 
-    def password_login(self, minimum_privilege_level: MinimumPrivilegeLevel, password: str) -> Response:
+    async def password_login(self, minimum_privilege_level: MinimumPrivilegeLevel, password: str) -> Response:
         """
         Perform a password login and store the authentication token.
 
@@ -209,19 +211,18 @@ class SatisfactoryAPI:
         Raises
         ------
         APIError
-            If the API returns an error or if the login is unsuccessful
-            (e.g., incorrect password or insufficient privileges).
+            If the API returns an error or if the login is unsuccessful.
         """
-        response = self._post('PasswordLogin', {
+        response = await self._post('PasswordLogin', {
             'MinimumPrivilegeLevel': minimum_privilege_level.value,
             'Password': password
         })
         self.auth_token = response['authenticationToken']
         return Response(success=True, data={'message': 'Successfully logged in, the token is now stored'})
 
-    def query_server_state(self):
+    async def query_server_state(self) -> Response:
         """
-        Query the server state
+        Query the server state.
 
         Returns
         -------
@@ -233,12 +234,12 @@ class SatisfactoryAPI:
         APIError
             If the API returns an error.
         """
-        response = self._post('QueryServerState')
+        response = await self._post('QueryServerState')
         return Response(success=True, data=response)
 
-    def get_server_options(self):
+    async def get_server_options(self) -> Response:
         """
-        Get the server options
+        Get the server options.
 
         Returns
         -------
@@ -250,10 +251,10 @@ class SatisfactoryAPI:
         APIError
             If the API returns an error.
         """
-        response = self._post('GetServerOptions')
+        response = await self._post('GetServerOptions')
         return Response(success=True, data=response)
 
-    def get_advanced_game_settings(self) -> Response:
+    async def get_advanced_game_settings(self) -> Response:
         """
         Fetch advanced game settings.
 
@@ -262,10 +263,10 @@ class SatisfactoryAPI:
         Response
             A Response containing the advanced game settings.
         """
-        response = self._post('GetAdvancedGameSettings')
+        response = await self._post('GetAdvancedGameSettings')
         return Response(success=True, data=response)
 
-    def apply_advanced_game_settings(self, settings: AdvancedGameSettings) -> Response:
+    async def apply_advanced_game_settings(self, settings: AdvancedGameSettings) -> Response:
         """
         Apply advanced game settings.
 
@@ -279,15 +280,13 @@ class SatisfactoryAPI:
         Response
             A Response indicating the success of the operation.
         """
-        self._post('ApplyAdvancedGameSettings', {
-            'AdvancedGameSettings': settings.to_dict()
-        })
+        await self._post('ApplyAdvancedGameSettings', {'AdvancedGameSettings': settings.to_dict()})
         return Response(success=True, data={
             'message': 'Successfully applied advanced game settings to the server.',
             'settings': settings.to_dict()
         })
 
-    def claim_server(self, server_name: str, admin_password: str) -> Response:
+    async def claim_server(self, server_name: str, admin_password: str) -> Response:
         """
         Claim the server.
 
@@ -303,13 +302,13 @@ class SatisfactoryAPI:
         Response
             A Response containing the server claim result.
         """
-        response = self._post('ClaimServer', {
+        response = await self._post('ClaimServer', {
             'ServerName': server_name,
             'AdminPassword': admin_password
         })
         return Response(success=True, data=response)
 
-    def rename_server(self, server_name: str) -> Response:
+    async def rename_server(self, server_name: str) -> Response:
         """
         Rename the server.
 
@@ -323,12 +322,10 @@ class SatisfactoryAPI:
         Response
             A Response indicating the success of the operation.
         """
-        response = self._post('RenameServer', {
-            'ServerName': server_name
-        })
+        response = await self._post('RenameServer', {'ServerName': server_name})
         return Response(success=True, data=response)
 
-    def set_client_password(self, password: str) -> Response:
+    async def set_client_password(self, password: str) -> Response:
         """
         Set the client password.
 
@@ -342,12 +339,10 @@ class SatisfactoryAPI:
         Response
             A Response indicating the success of the operation.
         """
-        response = self._post('SetClientPassword', {
-            'Password': password
-        })
+        response = await self._post('SetClientPassword', {'Password': password})
         return Response(success=True, data=response)
 
-    def set_admin_password(self, password: str, auth_token: str) -> Response:
+    async def set_admin_password(self, password: str, auth_token: str) -> Response:
         """
         Set the admin password.
 
@@ -363,15 +358,15 @@ class SatisfactoryAPI:
         Response
             A Response indicating the success of the operation.
         """
-        response = self._post('SetAdminPassword', {
+        response = await self._post('SetAdminPassword', {
             'Password': password,
             'AuthenticationToken': auth_token
         })
         return Response(success=True, data=response)
 
-    def set_auto_load_session_name(self, session_name: str) -> Response:
+    async def set_auto_load_session_name(self, session_name: str) -> Response:
         """
-        Set the auto-load session name. You can get session names by calling `enumerate_sessions` (You need admin privileges).
+        Set the auto-load session name.
 
         Parameters
         ----------
@@ -383,12 +378,10 @@ class SatisfactoryAPI:
         Response
             A Response indicating the success of the operation.
         """
-        response = self._post('SetAutoLoadSessionName', {
-            'SessionName': session_name
-        })
+        response = await self._post('SetAutoLoadSessionName', {'SessionName': session_name})
         return Response(success=True, data=response)
 
-    def run_command(self, command: str) -> Response:
+    async def run_command(self, command: str) -> Response:
         """
         Run a server command.
 
@@ -402,12 +395,10 @@ class SatisfactoryAPI:
         Response
             A Response containing the result of the command.
         """
-        response = self._post('RunCommand', {
-            'Command': command
-        })
+        response = await self._post('RunCommand', {'Command': command})
         return Response(success=True, data=response)
 
-    def shutdown(self) -> Response:
+    async def shutdown(self) -> Response:
         """
         Shut down the server.
 
@@ -416,19 +407,19 @@ class SatisfactoryAPI:
         Response
             A Response indicating the success of the operation.
         """
-        self._post('Shutdown')
+        await self._post('Shutdown')
         return Response(success=True, data={
             'message': "Server is shutting down... Note: If the server is configured as a service and the restart "
                        "policy is set to 'always', it will restart automatically."
         })
 
-    def apply_server_options(self, options: ServerOptions) -> Response:
+    async def apply_server_options(self, options: ServerOptions) -> Response:
         """
         Apply server options.
 
         Parameters
         ----------
-        options : dict
+        options : ServerOptions
             The server options to apply.
 
         Returns
@@ -436,14 +427,13 @@ class SatisfactoryAPI:
         Response
             A Response indicating the success of the operation.
         """
-        print(self._post('ApplyServerOptions', {
-            'UpdatedServerOptions': options.to_dict()
-        }))
-        return Response(success=True, data={'message': 'Successfully applied server options to the server.',
-                                            'options': options.to_dict()
-                                            })
+        await self._post('ApplyServerOptions', {'UpdatedServerOptions': options.to_dict()})
+        return Response(success=True, data={
+            'message': 'Successfully applied server options to the server.',
+            'options': options.to_dict()
+        })
 
-    def create_new_game(self, game_data: NewGameData) -> Response:
+    async def create_new_game(self, game_data: NewGameData) -> Response:
         """
         Create a new game.
 
@@ -457,12 +447,10 @@ class SatisfactoryAPI:
         Response
             A Response indicating the success of the operation.
         """
-        response = self._post('CreateNewGame', {
-            'NewGameData': game_data.__dict__  # Convert dataclass to dict
-        })
+        response = await self._post('CreateNewGame', {'NewGameData': game_data.__dict__})
         return Response(success=True, data=response)
 
-    def save_game(self, save_name: str) -> Response:
+    async def save_game(self, save_name: str) -> Response:
         """
         Save the game.
 
@@ -476,12 +464,10 @@ class SatisfactoryAPI:
         Response
             A Response indicating the success of the save operation.
         """
-        response = self._post('SaveGame', {
-            'SaveName': save_name
-        })
+        response = await self._post('SaveGame', {'SaveName': save_name})
         return Response(success=True, data=response)
 
-    def delete_save_file(self, save_name: str) -> Response:
+    async def delete_save_file(self, save_name: str) -> Response:
         """
         Delete a save file.
 
@@ -495,12 +481,10 @@ class SatisfactoryAPI:
         Response
             A Response indicating the success of the operation.
         """
-        response = self._post('DeleteSaveFile', {
-            'SaveName': save_name
-        })
+        response = await self._post('DeleteSaveFile', {'SaveName': save_name})
         return Response(success=True, data=response)
 
-    def delete_save_session(self, session_name: str) -> Response:
+    async def delete_save_session(self, session_name: str) -> Response:
         """
         Delete a save session.
 
@@ -514,12 +498,10 @@ class SatisfactoryAPI:
         Response
             A Response indicating the success of the operation.
         """
-        response = self._post('DeleteSaveSession', {
-            'SessionName': session_name
-        })
+        response = await self._post('DeleteSaveSession', {'SessionName': session_name})
         return Response(success=True, data=response)
 
-    def enumerate_sessions(self) -> Response:
+    async def enumerate_sessions(self) -> Response:
         """
         Enumerate available sessions. You need admin privileges to call this function.
 
@@ -528,10 +510,10 @@ class SatisfactoryAPI:
         Response
             A Response containing the available sessions.
         """
-        response = self._post('EnumerateSessions')
+        response = await self._post('EnumerateSessions')
         return Response(success=True, data=response)
 
-    def load_game(self, save_name: str, enable_advanced_game_settings: bool = False) -> Response:
+    async def load_game(self, save_name: str, enable_advanced_game_settings: bool = False) -> Response:
         """
         Load a saved game.
 
@@ -547,17 +529,17 @@ class SatisfactoryAPI:
         Response
             A Response indicating the success of the load operation.
         """
-        response = self._post('LoadGame', {
+        response = await self._post('LoadGame', {
             'SaveName': save_name,
             'EnableAdvancedGameSettings': enable_advanced_game_settings
         })
         return Response(success=True, data=response)
 
-    def upload_save_game(self, save_name: str, load_save_game: bool = False,
-                         enable_advanced_game_settings: bool = False) -> Response:
+    async def upload_save_game(self, save_name: str, load_save_game: bool = False,
+                               enable_advanced_game_settings: bool = False) -> Response:
         raise NotImplementedError('This method is not implemented yet')
 
-    def download_save_game(self, save_name: str) -> Response:
+    async def download_save_game(self, save_name: str) -> Response:
         """
         Download a save game file.
 
@@ -571,7 +553,5 @@ class SatisfactoryAPI:
         Response
             A Response indicating the success and the save game in bytes.
         """
-        response = self._post('DownloadSaveGame', {
-            'SaveName': save_name
-        })
+        response = await self._post('DownloadSaveGame', {'SaveName': save_name})
         return Response(success=True, data=response)
