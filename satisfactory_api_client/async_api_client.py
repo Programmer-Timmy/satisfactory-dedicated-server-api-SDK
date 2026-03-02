@@ -78,15 +78,26 @@ class AsyncSatisfactoryAPI:
         ctx.load_verify_locations(cert_path)
         self._ssl_context = ctx
 
-    async def _post(self, function, data=None, files=None):
+    async def _post(self, func, data=None, files=None):
         """
         Post a request to the API
 
-        :param function: The function to call
-        :param data: The data to send
-        :param files: The files to send
-        :return: The response data
-        :raises APIError: If the API returns an error
+        Parameters
+        ----------
+        func : str
+            The API function to call
+        data : dict, optional
+            The data to send in the request body, by default None
+        files : dict, optional
+            The files to send in the request, by default None
+        Returns
+        -------
+        dict or bytes or str
+            The data returned by the API, which can be a dictionary (for JSON responses), bytes (for binary responses), or a string (for plain text responses).
+        Raises
+        ------
+        APIError
+            If the API returns an error (non-200/204 status code) or if the response contains an error message.
         """
         url = f"https://{self.host}:{self.port}/api/v1"
         headers = {'Content-Type': 'application/json'}
@@ -94,7 +105,7 @@ class AsyncSatisfactoryAPI:
         if self.auth_token:
             headers['Authorization'] = f'Bearer {self.auth_token}'
 
-        payload = {'function': function, 'data': data} if data else {'function': function}
+        payload = {'function': func, 'data': data} if data is not None else {'function': func}
 
         async with aiohttp.ClientSession() as session:
             async with session.post(url, json=payload, headers=headers, ssl=self._get_ssl()) as response:

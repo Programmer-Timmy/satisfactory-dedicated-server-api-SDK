@@ -75,17 +75,26 @@ class SatisfactoryAPI:
 
         self.cert_path = cert_path
 
-
+    def _post(self, func, data=None, files=None):
         """
         Post a request to the API
 
-        :param function: The function to call
-        :param data: The data to send
-        :param files: The files to send
-        :return: The response
-        :rtype: dict
-
-        :raises APIError: If the API returns an error
+        Parameters
+        ----------
+        func : str
+            The API function to call
+        data : dict, optional
+            The data to send in the request body, by default None
+        files : dict, optional
+            The files to send in the request, by default None
+        Returns
+        -------
+        dict or bytes or str
+            The data returned by the API, which can be a dictionary (for JSON responses), bytes (for binary responses), or a string (for plain text responses).
+        Raises
+        ------
+        APIError
+            If the API returns an error (non-200/204 status code) or if the response contains an error message.
         """
         url = f"https://{self.host}:{self.port}/api/v1"
         headers = {'Content-Type': 'application/json'}
@@ -93,7 +102,7 @@ class SatisfactoryAPI:
         if self.auth_token:
             headers['Authorization'] = f'Bearer {self.auth_token}'
 
-        payload = {'function': function, 'data': data} if data else {'function': function}
+        payload = {'function': func, 'data': data} if data is not None else {'function': func}
 
         verify = False if self.skip_ssl_verification else (self.cert_path or False)
         response = requests.post(url, json=payload, headers=headers, files=files, verify=verify, stream=True)
