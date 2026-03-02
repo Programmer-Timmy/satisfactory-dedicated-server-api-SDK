@@ -12,7 +12,8 @@ setup(
     packages=find_packages(exclude=['tests', 'examples']),
     install_requires=[
         "python-dotenv~=1.0.1",
-        "requests~=2.32.3"
+        "requests~=2.32.3",
+        "aiohttp~=3.9",
     ],
     description='A Python Package for interacting with the Satisfactory Dedicated Server API',
     long_description=open(readme_path).read(),
