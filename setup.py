@@ -8,11 +8,11 @@ readme_path = os.path.join(root_dir, 'README.md')
 
 setup(
     name='satisfactory_api_client',
-    version='0.2.0',
+    version='0.2.1',
     packages=find_packages(exclude=['tests', 'examples']),
     install_requires=[
         "python-dotenv~=1.0.1",
-        "requests~=2.32.3",
+        "requests~=2.32",
         "aiohttp~=3.9",
     ],
     description='A Python Package for interacting with the Satisfactory Dedicated Server API',
